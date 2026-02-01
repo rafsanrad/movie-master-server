@@ -1,15 +1,14 @@
-const express = require('express')
-const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const app = express()
-const port = 3000
+const express = require("express");
+const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const app = express();
+const port = 3000;
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
-
-
-const uri = "mongodb+srv://movie-db:Z3qU1ctRO748u9EN@cluster0.xgamuc1.mongodb.net/?appName=Cluster0";
+const uri =
+  "mongodb+srv://movie-db:Z3qU1ctRO748u9EN@cluster0.xgamuc1.mongodb.net/?appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -17,7 +16,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -25,12 +24,87 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const db = client.db("movie-db");
+    const movieCollection = db.collection("movies");
 
+    // find
+    // findOne
 
-    
+    app.get("/movies", async (req, res) => {
+      const result = await movieCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/movies/:id", async (req, res) => {
+      const { id } = req.params;
+      const objectId = new ObjectId(id);
+
+      const result = await movieCollection.findOne({ _id: objectId });
+
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
+    // post method
+    //  insertOne
+    //  insertMany
+
+    app.post("/movies", async (req, res) => {
+      const data = req.body;
+      // console.log(data)
+      const result = await movieCollection.insertOne(data);
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
+    //PUT
+    //updateOne
+    //updateMany
+
+    app.put("/movies/:id", async (req, res) => {
+      const { id } = req.params;
+      const data = req.body;
+      // console.log(id)
+      // console.log(data)
+      const objectId = new ObjectId(id);
+      const filter = { _id: objectId };
+      const update = {
+        $set: data,
+      };
+
+      const result = await movieCollection.updateOne(filter, update);
+
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
+    // delete
+    // deleteOne
+    // deleteMany
+
+    // app.delete("/movies/:id", async (req, res) => {
+    //   const { id } = req.params;
+    //   //    const objectId = new ObjectId(id)
+    //   // const filter = {_id: objectId}
+    //   const result = await movieCollection.deleteOne({ _id: new ObjectId(id) });
+
+    //   res.send({
+    //     success: true,
+    //     result,
+    //   });
+    // });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!",
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -38,12 +112,10 @@ async function run() {
 }
 run().catch(console.dir);
 
-
-
-app.get('/', (req, res) => {
-  res.send('Server is running..')
-})
+app.get("/", (req, res) => {
+  res.send("Server is running..");
+});
 
 app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`)
-})
+  console.log(`Server is listening on port ${port}`);
+});
