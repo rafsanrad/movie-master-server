@@ -27,8 +27,6 @@ async function run() {
     const db = client.db("movie-db");
     const movieCollection = db.collection("movies");
 
-    // find
-    // findOne
 
     app.get("/movies", async (req, res) => {
       const result = await movieCollection.find().toArray();
@@ -47,10 +45,6 @@ async function run() {
       });
     });
 
-    // post method
-    //  insertOne
-    //  insertMany
-
     app.post("/movies", async (req, res) => {
       const data = req.body;
       // console.log(data)
@@ -60,10 +54,6 @@ async function run() {
         result,
       });
     });
-
-    //PUT
-    //updateOne
-    //updateMany
 
     app.put("/movies/:id", async (req, res) => {
       const { id } = req.params;
@@ -84,21 +74,17 @@ async function run() {
       });
     });
 
-    // delete
-    // deleteOne
-    // deleteMany
+    app.delete("/movies/:id", async (req, res) => {
+      const { id } = req.params;
+      //    const objectId = new ObjectId(id)
+      // const filter = {_id: objectId}
+      const result = await movieCollection.deleteOne({ _id: new ObjectId(id) });
 
-    // app.delete("/movies/:id", async (req, res) => {
-    //   const { id } = req.params;
-    //   //    const objectId = new ObjectId(id)
-    //   // const filter = {_id: objectId}
-    //   const result = await movieCollection.deleteOne({ _id: new ObjectId(id) });
-
-    //   res.send({
-    //     success: true,
-    //     result,
-    //   });
-    // });
+      res.send({
+        success: true,
+        result,
+      });
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
