@@ -1,12 +1,19 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceKey.json");
 require("dotenv").config()
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 const uri =
   `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.xgamuc1.mongodb.net/?appName=Cluster0`;
@@ -19,6 +26,27 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+const verifyToken = async (req, res, next) => {
+  const authorization = req.headers.authorization;
+
+  if (!authorization) {
+    return res.status(401).send({
+      message: "unauthorized access. Token not found!",
+    });
+  }
+
+  const token = authorization.split(" ")[1];
+  try {
+    await admin.auth().verifyIdToken(token);
+
+    next();
+  } catch (error) {
+    res.status(401).send({
+      message: "unauthorized access.",
+    });
+  }
+};
 
 async function run() {
   try {
@@ -33,7 +61,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/movies/:id", async (req, res) => {
+    app.get("/movies/:id",verifyToken, async (req, res) => {
       const { id } = req.params;
       const objectId = new ObjectId(id);
 
@@ -85,6 +113,14 @@ async function run() {
 
       res.send(result);
     });
+
+    app.get("/my-movies", verifyToken, async(req, res) => {
+      const email = req.query.email
+      const result = await movieCollection.find({addedBy: email}).toArray()
+      res.send(result)
+    })
+
+    
 
     app.delete("/movies/:id", async (req, res) => {
       const { id } = req.params;
