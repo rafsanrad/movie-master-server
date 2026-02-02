@@ -27,7 +27,6 @@ async function run() {
     const db = client.db("movie-db");
     const movieCollection = db.collection("movies");
 
-
     app.get("/movies", async (req, res) => {
       const result = await movieCollection.find().toArray();
       res.send(result);
@@ -72,6 +71,18 @@ async function run() {
         success: true,
         result,
       });
+    });
+
+    app.get("/latest-movies", async (req, res) => {
+      const result = await movieCollection
+        .find()
+        .sort({ releaseYear: "desc" })
+        .limit(6)
+        .toArray();
+
+      console.log(result);
+
+      res.send(result);
     });
 
     app.delete("/movies/:id", async (req, res) => {
